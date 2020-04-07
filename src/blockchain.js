@@ -74,6 +74,7 @@ class Blockchain {
             block.hash = SHA256(JSON.stringify(block)).toString();
             this.height = block.height;
             self.chain.push(block);
+            resolve(block);
         });
     }
 
@@ -116,7 +117,7 @@ class Blockchain {
             console.log(message_time);
             let currentTime = parseInt(new Date().getTime().toString().slice(0, -3));
             console.log(currentTime - message_time);
-            if ((currentTime - message_time) <= (1000*60*5)){
+            if ((currentTime - message_time) <= (60*5)){
                 if (bitcoinMessage.verify(message, address, signature)){
                      let block = new BlockClass.Block({data: {"star":star,"owner":address}});
                      await this._addBlock(block);
@@ -183,12 +184,10 @@ class Blockchain {
                 let encoded_data = self.chain[i].body;
                 let decoded_data = hex2ascii(encoded_data);
                 let data_object = JSON.parse(decoded_data);
+                console.log(data_object);
                 if (data_object.data["owner"] == address){
-                    let encoded_star = data_object.data["star"];
-                    let decoded_star = hex2ascii(encoded_star);
-                    stars.push(decoded_star);
+                    stars.push(data_object);
                 }
-
         }
             console.log(stars)
             resolve(stars)
@@ -206,8 +205,17 @@ class Blockchain {
         let errorLog = [];
         return new Promise(async (resolve, reject) => {
             for (let i=0; i<self.chain.length; i++){
-                let res = self.chain[i].validate();
-                errorLog.push(res);
+                let res = await self.chain[i].validate();
+                if (i>0){
+                    if ((res == false) || (self.chain[i].previousBlockHash == self.chain[i-1].hash)){
+                        errorLog.push(res);
+                    }
+                }
+                else{
+                    if(res == false){
+                        errorLog.push(res);
+                    }
+                }
         }
             resolve(errorLog);
         });

@@ -43,6 +43,7 @@ class Block {
             self.hash = null;
             // Recalculate the hash of the Block
             let calculated_hash = SHA256(JSON.stringify(self)).toString();
+            self.hash = hash;
             // Comparing if the hashes changed
             if (hash == calculated_hash){
                 resolve(true);
@@ -68,8 +69,11 @@ class Block {
      *     or Reject with an error.
      */
     getBData() {
+        let self = this;
+
+        return new Promise((resolve, reject) => {
         // Getting the encoded data saved in the Block
-        let encoded_data = this.body;
+        let encoded_data = self.body;
         // Decoding the data to retrieve the JSON representation of the object
         let decoded_data = hex2ascii(encoded_data);
         // Parse the data to an object to be retrieve.
@@ -82,9 +86,7 @@ class Block {
             reject(error);
         }
         // Resolve with the data if the object isn't the Genesis block
-
+    });
     }
-
 }
-
 module.exports.Block = Block;                    // Exposing the Block class as a module
